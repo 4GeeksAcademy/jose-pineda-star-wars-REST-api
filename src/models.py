@@ -1,19 +1,41 @@
-from flask_sqlalchemy import SQLAlchemy
+import os
+import sys
+from sqlalchemy import Column, ForeignKey, Integer, String
+from sqlalchemy.orm import relationship, declarative_base
+from sqlalchemy import create_engine
 
-db = SQLAlchemy()
+Base = declarative_base()
 
-class User(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    email = db.Column(db.String(120), unique=True, nullable=False)
-    password = db.Column(db.String(80), unique=False, nullable=False)
-    is_active = db.Column(db.Boolean(), unique=False, nullable=False)
+class User(Base):
+    __tablename__ = 'users'
+    id = Column(Integer, primary_key=True)
+    username = Column(String(50), unique=True)
+    password = Column(String(50))
+    favorites = relationship('Favorite', back_populates='user')
 
-    def __repr__(self):
-        return '<User %r>' % self.username
+class Character(Base):
+    __tablename__ = 'characters'
+    id = Column(Integer, primary_key=True)
+    name = Column(String(50))
+    gender = Column(String(50))
+    hair_color = Column(String(50))
+    eye_color = Column(String(50))
 
-    def serialize(self):
-        return {
-            "id": self.id,
-            "email": self.email,
-            # do not serialize the password, its a security breach
-        }
+class Planet(Base):
+    __tablename__ = 'planets'
+    id = Column(Integer, primary_key=True)
+    name = Column(String(50))
+    climate = Column(String(50))
+    terrain = Column(String(50))
+    population = Column(Integer)
+    characters = relationship('Character')
+
+class Favorite(Base):
+    __tablename__ = 'favorites'
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey('users.id'))
+    user = relationship('User', back_populates='favorites')
+    character_id = Column(Integer, ForeignKey('characters.id'))
+    character = relationship('Character')
+    planet_id = Column(Integer, ForeignKey('planets.id'))
+    planet = relationship('Planet')
